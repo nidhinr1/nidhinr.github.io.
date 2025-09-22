@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nidhin's Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+        }
+
+        #terminal {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background-color: rgba(0, 0, 0, 0.85);
+            box-shadow: inset 0 0 100px rgba(0, 255, 0, 0.1);
+            position: relative;
+        }
+
+        /* Scanline effect */
+        #terminal::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #header {
+            background-color: #1a1a1a;
+            padding: 10px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        #header h1 {
+            font-size: 28px;
+            margin: 0;
+            color: #00ff00;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        nav a {
+            color: #00ff00;
+            text-decoration: none;
+            margin-left: 20px;
+            transition: all 0.2s ease;
+        }
+
+        nav a:hover, nav a.active {
+            background-color: #00ff00;
+            color: #000;
+            padding: 2px 5px;
+        }
+
+        #main-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        #content {
+            padding: 15px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #output {
+            flex-grow: 1;
+        }
+
+        #output p, #output pre {
+            margin: 0 0 12px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .command-output .command {
+            color: #00ff00;
+        }
+
+        .command-output .output-text {
+            color: #fff;
+        }
+
+        #output .section-title {
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ff00;
+            margin-bottom: 15px;
+        }
+
+        #output a.link {
+            color: #00ffff;
+            text-decoration: underline;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        #output a.link:hover {
+            color: #ffffff;
+            text-shadow: 0 0 3px #00ffff;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .prompt {
+            color: #00ff00;
+            flex-shrink: 0;
+        }
+
+        #command-input {
+            background-color: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+            text-shadow: 0 0 3px #00ff00;
+        }
+
+        /* Blinking cursor effect */
+        #command-input:focus {
+            background-color: #00ff00;
+            color: #000;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { background-color: transparent; color: #00ff00; }
+        }
+
+        #image-panel {
+            width: 300px;
+            background-color: #000000;
+            border: 1px solid #00ff00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+
+        #pixelated-image {
+            max-width: 100%;
+            max-height: 100%;
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div id="header">
+            <h1>NIDHIN_R.EXE</h1>
+            <nav>
+                <a href="#" data-command="home">Home</a>
+                <a href="#" data-command="about">About</a>
+                <a href="#" data-command="experience">Experience</a>
+                <a href="#" data-command="education">Education</a>
+                <a href="#" data-command="projects">Projects</a>
+            </nav>
+        </div>
+        <div id="main-container">
+            <div id="content">
+                <div id="output"></div>
+                <div class="input-line">
+                    <span class="prompt">C:\Users\Guest>&nbsp;</span>
+                    <input type="text" id="command-input" autofocus>
+                </div>
+            </div>
+            <div id="image-panel">
+                <canvas id="pixelated-image" style="display: none;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const commandInput = document.getElementById('command-input');
+            const output = document.getElementById('output');
+            const navLinks = document.querySelectorAll('nav a');
+            const canvas = document.getElementById('pixelated-image');
+            const ctx = canvas.getContext('2d');
+            const image = new Image();
+
+            // --- CUSTOMIZE YOUR CONTENT HERE ---
+            // The 'home' string has been carefully formatted to ensure perfect alignment.
+            const sections = {
+                'home': `
+<br>
+<p class="section-title">== Welcome to my portfolio. ==</p>
+Type a command or click a link to navigate.
+Available commands:
+  'home'       - Displays this welcome screen.
+  'about'      - Shows my professional summary.
+  'experience' - Details my work history.
+  'education'  - Lists my academic background.
+  'projects'   - Showcases my projects.
+  'clear'      - Clears the terminal screen.
+`,
+                'about': `
+<p class="section-title">== About Me ==</p>
+Hello, My name is Nidhin R and I am MSc Computer Science graduate from University  of Kerala, Kariavattom Campus, Thiruvananthapuram. 
+I am passionate about Web development, Data science, Flutter app development and Machine learning.
+Proficient in Python, Django, database management, MVC architecture and ML algorithms with hands-on project experience.
+My hobbies are playing video games, watching movies and programming. 
+<a href="https://www.linkedin.com/in/nidhin-r-5b10ba227" class="link" target="_blank">www.linkedin.com/in/nidhin-r-5b10ba227</a> 
+`,
+                'experience': `
+<p class="section-title">== Work Experience ==</p>
+<b>AI/ML Intern @ Gaude Business Solutions.</b> (2025 - Present)
+- Working on GenAI projects and well as various backend projects.
+- Technologies used include Django framework and Langchain.
+
+<b>UI/UX Intern @ Creative App Lab Pvt</b> (2025 - 2025)
+- Developed and maintained High fidelity design and wireframes for mobile apps.
+- Technologies used include Figma.
+`,
+                'education': `
+<p class="section-title">== Education ==</p>
+<b>Master of Science in Computer Science</b>
+University of Kerala, Kariyavattom Campus (2023 - 2025)
+- Graduated with 9.40 CGPA
+
+<b>Bachelor of Science in Computer Science</b>
+University Institute of Technology (2020 - 2023)
+- Graduated with 8.65 CGPA
+`,
+                'projects': `
+<p class="section-title">== Projects ==</p>
+<b>Automated Legacy Code Reafactoring</b>
+Automated Legacy code refactoring is a system to refactor and convert old legacy java to modern python code.
+The tech stack include streamlit, random forest model, and various python libaraies including pylint and PMD for java.
+Link: <a href="https://github.com/nidhinr1/Automated-Legacy-Code-Refactoring" class="link" target="_blank">https://github.com/nidhinr1/Automated-Legacy-Code-Refactoring</a>
+
+<b>Review Classification</b>
+ML model for classifing review as human generated or ai generated using LSTM.
+Link: <a href="https://github.com/nidhinr1/Review-Classification" class="link" target="_blank">https://github.com/nidhinr1/Review-Classification</a>
+
+<b>Obi1</b>
+A Flutter app for an objective identification using Dart and TFlite model.
+App uses MobileNetV1 to detect images and the results are displayed with confidence levels for accurate recognition. 
+Link: <a href="https://github.com/nidhinr1/Objectdetection-flutter-" class="link" target="_blank">https://github.com/nidhinr1/Objectdetection-flutter-</a>
+
+<b>Real-Time WeatherApp</b>
+A real-time weather forecasting application using Node.js, JavaScript, and Express. 
+Utilized OpenWeatherMap API for weather data. 
+Link: <a href="https://github.com/nidhinr1/Weatherapp-nodejs-" class="link" target="_blank">https://github.com/nidhinr1/Weatherapp-nodejs-</a>
+
+<b>Billing System</b>
+Billing system for an electronic shop using Django. 
+Features include sales summary, profit and loss reports, and stock level management. 
+Link: <a href="https://github.com/nidhinr1/BillingSystem-Sqlite-" class="link" target="_blank">https://github.com/nidhinr1/BillingSystem-Sqlite-</a>
+
+<b>MYNEWKICKS</b>
+Sneaker buying and reselling website. Developed using Django (python web framework).
+Link: <a href="https://nidhinr.pythonanywhere.com/" class="link" target="_blank">https://nidhinr.pythonanywhere.com/</a>
+
+<b>Volt-Kerala</b>
+Electric vehicle and parts buying website. 
+It include many other feature such as finding charging station and reselling, renting EVs.
+Developed using PHP, MySQL and XAMMP server.
+`
+            };
+
+            // Load your image here
+            image.onload = () => {
+                pixelate(15); // Adjust pixelation level (higher number = more pixelated)
+                displayContent('home'); // Show home page by default
+            };
+
+            // Replace 'your-image.jpg' with the path to your actual image
+            image.src = 'me.png';
+            
+            // Show home page by default when page loads
+            displayContent('home');
+
+            function pixelate(pixelSize) {
+                const w = image.width;
+                const h = image.height;
+                canvas.width = w;
+                canvas.height = h;
+                ctx.drawImage(image, 0, 0);
+                const imgData = ctx.getImageData(0, 0, w, h).data;
+                ctx.clearRect(0, 0, w, h);
+
+                for (let y = 0; y < h; y += pixelSize) {
+                    for (let x = 0; x < w; x += pixelSize) {
+                        const i = (y * w + x) * 4;
+                        const r = imgData[i];
+                        const g = imgData[i + 1];
+                        const b = imgData[i + 2];
+                        ctx.fillStyle = `rgba(${r},${g},${b},0.8)`;
+                        ctx.fillRect(x, y, pixelSize, pixelSize);
+                    }
+                }
+            }
+
+            function type(text, element, callback) {
+                let i = 0;
+                element.innerHTML = '';
+                function typing() {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                        setTimeout(typing, 10); // Adjust typing speed
+                    } else if (callback) {
+                        callback();
+                    }
+                }
+                typing();
+            }
+
+            function displayContent(command) {
+                output.innerHTML = '';
+                if (sections[command]) {
+                    const contentDiv = document.createElement('div');
+                    output.appendChild(contentDiv);
+
+                    // Using pre to preserve formatting
+                    const pre = document.createElement('pre');
+                    pre.innerHTML = sections[command].trim();
+                    contentDiv.appendChild(pre);
+                    
+                    // Always show the canvas for all navigation options
+                    canvas.style.display = 'block';
+                    
+                    // Add event listeners to all links after content is displayed
+                    addLinkEventListeners();
+                }
+                updateActiveLink(command);
+            }
+            
+            function addLinkEventListeners() {
+                const links = output.querySelectorAll('a.link');
+                links.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const url = link.getAttribute('href');
+                        if (url && url !== '#') {
+                            window.open(url, '_blank');
+                        }
+                    });
+                });
+            }
+            
+            function handleCommand(command) {
+                const commandOutput = document.createElement('div');
+                commandOutput.classList.add('command-output');
+                commandOutput.innerHTML = `<p><span class="prompt">C:\\Users\\Guest>&nbsp;</span><span class="command">${command}</span></p>`;
+                output.appendChild(commandOutput);
+
+                if (sections[command]) {
+                    displayContent(command);
+                } else if (command === 'clear') {
+                    output.innerHTML = '';
+                } else if (command) {
+                    const errorText = document.createElement('p');
+                    errorText.classList.add('output-text');
+                    errorText.textContent = `Command not found: '${command}'. Type 'home' for a list of commands.`;
+                    output.appendChild(errorText);
+                }
+                commandInput.value = '';
+                document.getElementById('content').scrollTop = document.getElementById('content').scrollHeight;
+            }
+
+            function updateActiveLink(command) {
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.dataset.command === command);
+                });
+            }
+
+            commandInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    handleCommand(commandInput.value.trim().toLowerCase());
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const command = e.target.dataset.command;
+                    handleCommand(command);
+                });
+            });
+
+            // Focus input on any keypress to maintain terminal feel
+            document.addEventListener('keydown', (e) => {
+                if (e.target !== commandInput) {
+                    commandInput.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
